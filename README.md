@@ -1,17 +1,11 @@
 # Build a Kubernetes cluster using K3S via Ansible
 
-
-[[_TOC_]]
-
 ## K3s Ansible Playbook
 
 Build a Kubernetes cluster using Ansible with k3s.
 The goal is easily to install a Kubernetes cluster on machines.
 
-Two Reference provisioners are tested:
-  - Vagrant (local development)
-  - Staging/Production environment at LRZ
-
+Reference provisioner is a local Vagrant VM setup
 
 ## System requirements
 
