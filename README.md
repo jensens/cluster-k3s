@@ -25,7 +25,7 @@ This is because in Vagrant every machine is provisioned on its own in random ord
 But to install K3S order matters.
 
 - [Install Vagrant](https://www.vagrantup.com/docs/installation)
-  - install `vagrant-scp` plugin: ```vagrant plugin install vagrant-scp```
+- Install `vagrant-scp` plugin: ```vagrant plugin install vagrant-scp```
 - Install Ansible i.e. with `apt install ansible`
 - Start the cluster `vagrant up`
 - Install additional Ansible Role from Galaxy `ansible-galaxy install -r collections/requirements.yml`
