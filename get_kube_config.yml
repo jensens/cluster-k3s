@@ -1,0 +1,18 @@
+# run with:
+# ansible-playbook [-i inventory/[staging|production]] install-k3s.yml
+
+---
+
+- hosts:
+    - manager
+  gather_facts: true
+  become: true
+
+  tasks:
+  - name: Copy kube config file to local directory
+    ansible.builtin.fetch:
+      src: /etc/rancher/k3s/k3s.yaml
+      dest: ~/.kube/config-{{ inventory_hostname }}
+      flat: true
+
+...

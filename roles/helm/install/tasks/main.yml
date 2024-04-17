@@ -1,0 +1,21 @@
+
+- name: Download Helm armoured GPG key
+  ansible.builtin.get_url:
+    url: https://baltocdn.com/helm/signing.asc
+    dest: /etc/apt/helm.asc
+    mode: '0644'
+    force: true
+
+- name: Unarmour Helm GPG key
+  shell: gpg --dearmor < /etc/apt/helm.asc > /etc/apt/trusted.gpg.d/helm.gpg
+
+- name: Add Helm repo
+  apt_repository:
+    filename: example-repo
+    repo: 'deb https://baltocdn.com/helm/stable/debian/ all main'
+
+- name: Install Helm
+  package:
+    name: helm
+    state: present
+

@@ -1,0 +1,23 @@
+---
+
+- name: Check if K3s service file exists and is enabled
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/multi-user.target.wants/k3s-node.service"
+  register: k3s_service_file
+
+- name: Copy K3s service file
+  ansible.builtin.template:
+    src: "k3s.service.j2"
+    dest: "/etc/systemd/system/k3s-node.service"
+    owner: root
+    group: root
+    mode: 0755
+  when: "not k3s_service_file.stat.exists"
+  notify: "Restart K3s service"
+
+- name: Enable and check K3s service
+  ansible.builtin.systemd:
+    name: k3s-node
+    daemon_reload: yes
+    state: started
+    enabled: yes

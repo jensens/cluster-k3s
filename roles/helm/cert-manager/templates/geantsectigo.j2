@@ -1,0 +1,20 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: geantsectigo-cluster-issuer
+spec:
+  acme:
+    email: {{ gs_email }}
+    server: https://acme.demo.sectigo.com
+    privateKeySecretRef:
+      name: geantsectigo-prod
+    externalAccountBinding:
+      keyID: {{ gs_key }}
+      keySecretRef:
+        name: hmac1 # The name of the Kubernetes Secret
+        # created with your HMAC, uploaded as secret
+        key: geantsectigo-hmac-key
+    solvers:
+    - http01:
+        ingress:
+          class: traefik

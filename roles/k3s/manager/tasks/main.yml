@@ -1,0 +1,94 @@
+---
+
+- name: Check if K3s service file exists and is enabled
+  ansible.builtin.stat:
+    path: "/etc/systemd/system/multi-user.target.wants/k3s-node.service"
+  register: k3s_service_file
+
+- name: Copy K3s service file (initial server node)
+  ansible.builtin.template:
+    src: "k3s.service.initial.j2"
+    dest: "/etc/systemd/system/k3s.service"
+    owner: root
+    group: root
+    mode: 0644
+  register: k3s_service
+  notify: "Restart K3s service"
+  when: "not k3s_service_file.stat.exists and (groups[manager_group].index(inventory_hostname) if inventory_hostname in groups[manager_group] else 1) == 0"
+
+- name: Copy K3s service file (additional server nodes)
+  ansible.builtin.template:
+    src: "k3s.service.additional.j2"
+    dest: "/etc/systemd/system/k3s.service"
+    owner: root
+    group: root
+    mode: 0644
+  register: k3s_service
+  notify: "Restart K3s service"
+  when: "not k3s_service_file.stat.exists and (groups[manager_group].index(inventory_hostname) if inventory_hostname in groups[manager_group] else 1) > 0"
+
+- name: Enable and check K3s service (initial server node)
+  systemd:
+    name: k3s
+    daemon_reload: yes
+    state: started
+    enabled: yes
+  when: (groups[manager_group].index(inventory_hostname) if inventory_hostname in groups[manager_group] else 1) == 0
+
+- name: Enable and check K3s service
+  systemd:
+    name: k3s
+    daemon_reload: yes
+    state: started
+    enabled: yes
+  when: (groups[manager_group].index(inventory_hostname) if inventory_hostname in groups[manager_group] else 1) > 0
+
+- name: Create directory .kube
+  file:
+    path: /home/{{ service_user }}/.kube
+    state: directory
+    owner: "{{ service_user }}"
+    mode: "u=rwx,g=rx,o="
+
+- name: Copy kube config file to user home directory
+  ansible.builtin.copy:
+    src: /etc/rancher/k3s/k3s.yaml
+    remote_src: yes
+    dest: /home/{{ service_user }}/.kube/config
+    owner: "{{ service_user }}"
+    mode: "u=rw,g=,o="
+
+- name: Copy kube config file to local directory
+  ansible.builtin.fetch:
+    src: /etc/rancher/k3s/k3s.yaml
+    dest: ~/.kube/config-{{ inventory_hostname }}
+    flat: true
+
+- name: set server IP
+  ansible.builtin.lineinfile:
+    path: ~/.kube/config-{{ inventory_hostname }}
+    line: '    server: https://{{ inventory_hostname }}:6443'
+    regexp: '^    server:'
+  delegate_to: localhost
+  become: false
+
+- name: Create kubectl symlink
+  ansible.builtin.file:
+    src: /usr/local/bin/k3s
+    dest: /usr/local/bin/kubectl
+    state: link
+
+- name: Create .kube/config symlink
+  ansible.builtin.file:
+    src: ~/.kube/config-{{ inventory_hostname }}
+    dest: ~/.kube/config
+    state: link
+  delegate_to: localhost
+  become: false
+  when: (groups[manager_group].index(inventory_hostname) if inventory_hostname in groups[manager_group] else 1) == 0
+
+- name: Create crictl symlink
+  ansible.builtin.file:
+    src: /usr/local/bin/k3s
+    dest: /usr/local/bin/crictl
+    state: link

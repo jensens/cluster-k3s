@@ -1,0 +1,61 @@
+---
+
+# run with:
+# ansible-playbook [-i inventory/[staging|production]] install-k3s.yml
+
+- hosts: all
+  gather_facts: true
+  become: true
+  roles:
+    - role: prereq
+  tags:
+    - prepare
+
+- hosts: all
+  gather_facts: true
+  become: true
+  roles:
+    - role: download
+  tags:
+    - prepare
+
+- hosts: manager
+  gather_facts: true
+  become: true
+  roles:
+    - role: k3s/manager
+  tags:
+    - k3s
+
+- hosts: agent
+  gather_facts: true
+  become: true
+  roles:
+    - role: k3s/agent
+  tags:
+    - k3s
+
+- hosts: manager
+  gather_facts: true
+  become: true
+  roles:
+    - role: helm/install
+  tags:
+    - k3s
+
+- hosts: manager
+  gather_facts: true
+  run_once: true
+  roles:
+    - role: helm/cert-manager
+  tags:
+    - k3s
+
+- hosts: manager
+  gather_facts: true
+  run_once: true
+  roles:
+    - role: helm/portainer
+  tags:
+    - tools
+

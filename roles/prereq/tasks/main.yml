@@ -1,0 +1,40 @@
+---
+
+# - name: Enable IPv6 forwarding
+#   sysctl:
+#     name: net.ipv6.conf.all.forwarding
+#     value: "1"
+#     state: present
+#     reload: yes
+#   when: ansible_all_ipv6_addresses
+
+- name: Update the repository cache
+  ansible.builtin.apt:
+    update_cache: yes
+
+- name: Install Apparmour
+  package:
+    name: apparmor
+    state: present
+
+- name: Install GPG
+  package:
+    name: gpg
+    state: present
+
+- name: Install additional Python packages
+  package:
+    name:
+      - python3-yaml
+      - python3-kubernetes
+    state: present
+
+- name: Install net-tools
+  apt:
+    name: net-tools
+    state: present
+
+- name: Install htop
+  apt:
+    name: htop
+    state: present

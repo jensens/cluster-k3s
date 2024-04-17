@@ -1,0 +1,24 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: portainer
+  annotations:
+    kubernetes.io/ingress.class: "traefik"
+    cert-manager.io/cluster-issuer: "{{ portainer_issuer }}"
+
+spec:
+  tls:
+  - hosts:
+    - "{{ portainer_domain }}"
+    secretName: portainer-tls
+  rules:
+  - host: "{{ portainer_domain }}"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: portainer
+            port:
+              number: 9000

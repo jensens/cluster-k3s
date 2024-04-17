@@ -1,0 +1,12 @@
+---
+
+# k3s
+k3s_version: "v1.29.3+k3s1"
+systemd_dir: "/etc/systemd/system"
+token: "78484f72-5c70-4d86-884b-ea826a0ca5e7"
+
+# configure ingress
+portainer_domain: "portainer.cluster"
+portainer_issuer: "selfsigned-cluster-issuer"
+
+le_email: ""

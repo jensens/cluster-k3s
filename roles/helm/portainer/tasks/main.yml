@@ -1,0 +1,35 @@
+---
+
+- name: Add the Portainer chart repo
+  run_once: true
+  kubernetes.core.helm_repository:
+    name: portainer
+    repo_url: "https://portainer.github.io/k8s/"
+
+- name: Copy values file for Portainer Helm Chart
+  template:
+    src: "values.yml.j2"
+    dest: "/home/{{ service_user }}/portainer-values.yml"
+
+- name: Deploy latest version of Portainer
+  run_once: true
+  kubernetes.core.helm:
+    chart_ref: portainer/portainer
+    release_name: portainer
+    release_namespace: tools-system
+    create_namespace: yes
+    values_files:
+    - "/home/{{ service_user }}/portainer-values.yml"
+    kubeconfig: /home/{{ service_user }}/.kube/config
+    wait: true
+
+- name: Copy ingress yaml
+  template:
+    src: "ingress.yml.j2"
+    dest: "/home/{{ service_user }}/portainer-ingress.yml"
+
+- name: Apply portainer ingress
+  kubernetes.core.k8s:
+    state: present
+    namespace: tools-system
+    src: "/home/{{ service_user }}/portainer-ingress.yml"

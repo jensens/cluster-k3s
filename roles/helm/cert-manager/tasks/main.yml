@@ -1,0 +1,86 @@
+---
+
+- name: Download and install kubectl certmanager plugin
+  become: true
+  ansible.builtin.unarchive:
+    src: "https://github.com/jetstack/cert-manager/releases/latest/download/kubectl-cert_manager-linux-amd64.tar.gz"
+    dest: /usr/local/bin
+    remote_src: yes
+
+- name: Download and kubectl apply certmanager plugin CRD
+  ansible.builtin.get_url:
+    url: https://github.com/cert-manager/cert-manager/releases/download/v{{ chart_version }}/cert-manager.crds.yaml
+    dest: /home/{{ service_user }}/cert-manager.crds.yaml
+    mode: '0664'
+
+# https://artifacthub.io/packages/helm/cert-manager/cert-manager
+
+- name: Add the Jetstack chart repo
+  kubernetes.core.helm_repository:
+    name: jetstack
+    repo_url: "https://charts.jetstack.io"
+  tags:
+    - jetstack
+
+- name: Copy values file for Cert-Manager Helm Chart
+  template:
+    src: "values.yml.j2"
+    dest: "/home/{{ service_user }}/cert-manager-values.yml"
+
+
+# Download and apply manifest
+- name: Download CRD yaml to the cluster.
+  ansible.builtin.get_url:
+    url: "https://github.com/cert-manager/cert-manager/releases/download/v{{ chart_version }}/cert-manager.crds.yaml"
+    dest: /home/{{ service_user }}/cert-manager.crds.yaml
+    mode: '0664'
+
+- name: Apply cert-manager CustomResourceDefinition resources
+  kubernetes.core.k8s:
+    state: present
+    src: "/home/{{ service_user }}/cert-manager.crds.yaml"
+
+- name: Deploy Cert Manager
+  kubernetes.core.helm:
+    chart_ref: jetstack/cert-manager
+    chart_version: "{{ chart_version }}"
+    release_name: cert-manager
+    release_namespace: cert-manager
+    create_namespace: yes
+    values_files:
+    - "/home/{{ service_user }}/cert-manager-values.yml"
+    kubeconfig: /home/{{ service_user }}/.kube/config
+
+- name: Copy self-signed cluster issuer yaml
+  template:
+    src: "selfsigned.yml.j2"
+    dest: "/home/{{ service_user }}/issuer-selfsigned.yml"
+
+- name: Apply self-signed cluster issuer
+  kubernetes.core.k8s:
+    state: present
+    src: "/home/{{ service_user }}/issuer-selfsigned.yml"
+
+- name: Copy letsencrypt test cluster issuer yaml
+  template:
+    src: "letsencrypttest.yml.j2"
+    dest: "/home/{{ service_user }}/issuer-letsencrypttest.yml"
+  when: le_email != ""
+
+- name: Apply letsencrypt test cluster issuer
+  kubernetes.core.k8s:
+    state: present
+    src: "/home/{{ service_user }}/issuer-letsencrypttest.yml"
+  when: le_email != ""
+
+- name: Copy letsencrypt cluster issuer yaml
+  template:
+    src: "letsencrypt.yml.j2"
+    dest: "/home/{{ service_user }}/issuer-letsencrypt.yml"
+  when: le_email != ""
+
+- name: Apply letsencrypt cluster issuer
+  kubernetes.core.k8s:
+    state: present
+    src: "/home/{{ service_user }}/issuer-letsencrypt.yml"
+  when: le_email != ""

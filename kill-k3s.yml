@@ -1,0 +1,48 @@
+---
+
+# run with:
+# ansible-playbook [-i inventory/[staging|production]] kill-k3s.yml
+
+- hosts:
+    - manager
+    - quorum
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: disable k3s
+      systemd:
+        name: k3s
+        enabled: false
+        state: stopped
+
+- hosts:
+    - agent
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: disable k3s-nodes
+      systemd:
+        name: k3s-node
+        enabled: false
+        state: stopped
+
+- hosts: k3s
+  gather_facts: true
+  become: true
+
+  tasks:
+    - name: reboot
+      ansible.builtin.reboot:
+
+    - name: delete directories
+      ansible.builtin.file:
+        path: "{{ item }}"
+        state: absent
+      loop:
+        - /etc/rancher/k3s
+        - /run/k3s
+        - /run/flannel
+        - /var/lib/rancher/k3s
+        - /var/lib/kubelet

@@ -1,0 +1,8 @@
+.vagrant/*
+venv
+.vscode
+
+/cmdb/
+/cmdb.html
+/out/
+/overview.html

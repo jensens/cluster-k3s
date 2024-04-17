@@ -1,0 +1,5 @@
+---
+
+  - name: Set label on k3s node
+    delegate_to: "{{ groups[manager_group][0] }}"
+    shell: "kubectl label --overwrite=true node {{ inventory_hostname_short }} {{ label_key }}={{ label_value }}"
