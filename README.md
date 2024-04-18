@@ -56,7 +56,7 @@ Run `vagrant destroy -f`
 Append a line to your `/etc/hosts` (as root user):
 
 ```shell
-echo "172.16.0.20	portainer.cluster traefik.cluster" >>/etc/hosts
+echo "172.16.0.20	cluster-manager-0 portainer.cluster traefik.cluster" >>/etc/hosts
 ```
 
 Then access the tools in the browser using
